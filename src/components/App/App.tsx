@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { notify, toastOptions } from '../../helpers/hot-toast';
 
@@ -13,27 +14,28 @@ import ErrorMessage from '../ErrorMessage/ErrorMessage';
 import MovieModal from '../MovieModal/MovieModal';
 
 function App() {
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
+  const [query, setQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-  const handleSearch = async (query: string) => {
-    setMovies([]);
-    setIsLoading(true);
-    setIsError(false);
-    try {
-      const movies = await fetchMovies(query);
-      if (!movies.length) {
-        notify('No movies found for your request.');
-        return;
-      }
-      setMovies(movies);
-    } catch {
-      setIsError(true);
-    } finally {
-      setIsLoading(false);
-    }
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['movies', query, currentPage],
+    queryFn: () => fetchMovies(query, currentPage),
+    enabled: query !== '',
+  });
+
+  const movies = data?.results ?? [];
+
+  const totalPages = data?.total_page ?? 0;
+  console.log(totalPages);
+
+  if (!isLoading && !isError && query && movies.length === 0) {
+    notify('No movies found for your request.');
+  }
+
+  const handleSearch = async (newQuery: string) => {
+    setQuery(newQuery);
+    setCurrentPage(1);
   };
 
   const handleSelect = (movie: Movie) => {
