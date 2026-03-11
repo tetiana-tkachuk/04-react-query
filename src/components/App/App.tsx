@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { notify, toastOptions } from '../../helpers/hot-toast';
@@ -30,9 +30,11 @@ function App() {
 
   const totalPages = data?.total_pages ?? 0;
 
-  if (!isLoading && !isError && query && movies.length === 0) {
-    notify('No movies found for your request.');
-  }
+  useEffect(() => {
+    if (isSuccess && query && movies.length === 0) {
+      notify('No movies found for your request.');
+    }
+  }, [isSuccess, query, movies.length]);
 
   const handleSearch = async (newQuery: string) => {
     setQuery(newQuery);
