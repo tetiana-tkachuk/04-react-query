@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { notify, toastOptions } from '../../helpers/hot-toast';
 import ReactPaginate from 'react-paginate';
@@ -23,6 +23,7 @@ function App() {
     queryKey: ['movies', query, page],
     queryFn: () => fetchMovies(query, page),
     enabled: query !== '',
+    placeholderData: keepPreviousData,
   });
 
   const movies = data?.results ?? [];
