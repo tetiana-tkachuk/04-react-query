@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { notify, toastOptions } from '../../helpers/hot-toast';
+import ReactPaginate from 'react-paginate';
 
 import css from './App.module.css';
 import type { Movie } from '../../types/movie';
@@ -15,19 +16,18 @@ import MovieModal from '../MovieModal/MovieModal';
 
 function App() {
   const [query, setQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [page, setPage] = useState(1);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ['movies', query, currentPage],
-    queryFn: () => fetchMovies(query, currentPage),
+  const { data, isLoading, isError, isSuccess } = useQuery({
+    queryKey: ['movies', query, page],
+    queryFn: () => fetchMovies(query, page),
     enabled: query !== '',
   });
 
   const movies = data?.results ?? [];
 
-  const totalPages = data?.total_page ?? 0;
-  console.log(totalPages);
+  const totalPages = data?.total_pages ?? 0;
 
   if (!isLoading && !isError && query && movies.length === 0) {
     notify('No movies found for your request.');
@@ -35,7 +35,7 @@ function App() {
 
   const handleSearch = async (newQuery: string) => {
     setQuery(newQuery);
-    setCurrentPage(1);
+    setPage(1);
   };
 
   const handleSelect = (movie: Movie) => {
@@ -46,6 +46,19 @@ function App() {
     <div className={css.app}>
       <SearchBar onSubmit={handleSearch} />
       <Toaster toastOptions={toastOptions} />
+      {isSuccess && totalPages > 1 && (
+        <ReactPaginate
+          pageCount={totalPages}
+          pageRangeDisplayed={5}
+          marginPagesDisplayed={1}
+          onPageChange={({ selected }) => setPage(selected + 1)}
+          forcePage={page - 1}
+          containerClassName={css.pagination}
+          activeClassName={css.active}
+          nextLabel="→"
+          previousLabel="←"
+        />
+      )}
       {isError ? (
         <ErrorMessage />
       ) : (
